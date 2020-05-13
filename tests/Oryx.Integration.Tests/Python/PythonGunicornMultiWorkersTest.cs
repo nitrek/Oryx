@@ -23,25 +23,21 @@ namespace Microsoft.Oryx.Integration.Tests
         public async Task CanBuildAndRunPythonApp_UsingGunicornMultipleWorkers()
         {
             // Arrange
-            var pythonVersion = "3.7";
-            var appName = "http-server-py";
+            var appName = "django-app";
             var volume = CreateAppVolume(appName);
             var appDir = volume.ContainerDir;
-            var startupFile = "/tmp/startup.sh";
-
             var buildScript = new ShellScriptBuilder()
-                .SetEnvironmentVariable(
-                    ExtVarNames.PythonEnableGunicornMultiWorkersEnvVarName,
-                    "true")
-                .AddCommand($"oryx build {appDir} --platform {PythonConstants.PlatformName} --platform-version {pythonVersion}")
+                .SetEnvironmentVariable(ExtVarNames.PythonEnableGunicornMultiWorkersEnvVarName, true.ToString())
+                .AddCommand($"oryx build {appDir} --platform {PythonConstants.PlatformName} --platform-version 3.7")
+                .SetEnvironmentVariable(ExtVarNames.PythonEnableGunicornMultiWorkersEnvVarName, false.ToString())
                 .ToString();
 
             var runScript = new ShellScriptBuilder()
-                .SetEnvironmentVariable(
-                    ExtVarNames.PythonEnableGunicornMultiWorkersEnvVarName,
-                    "true")
+                .AddCommand($"cd {appDir}")
+                .SetEnvironmentVariable(ExtVarNames.PythonEnableGunicornMultiWorkersEnvVarName, true.ToString())
                 .AddCommand($"oryx create-script -appPath {appDir} -bindPort {ContainerPort}")
-                .AddCommand(startupFile)
+                .AddCommand(DefaultStartupFilePath)
+                .SetEnvironmentVariable(ExtVarNames.PythonEnableGunicornMultiWorkersEnvVarName, false.ToString())
                 .ToString();
 
             await EndToEndTestHelper.BuildRunAndAssertAppAsync(
@@ -54,7 +50,7 @@ namespace Microsoft.Oryx.Integration.Tests
                     "-c",
                     buildScript
                 },
-                _imageHelper.GetRuntimeImage("python", pythonVersion),
+                _imageHelper.GetRuntimeImage("python", "3.7"),
                 ContainerPort,
                 "/bin/bash",
                 new[]
@@ -64,8 +60,8 @@ namespace Microsoft.Oryx.Integration.Tests
                 },
                 async (hostPort) =>
                 {
-                    var data = await _httpClient.GetStringAsync($"http://localhost:{hostPort}/");
-                    Assert.Contains("Hello Gunicorn!", data);
+                    var data = await GetResponseDataAsync($"http://localhost:{hostPort}/uservoice/");
+                    Assert.Contains("Hello, World!", data);
                 });
         }
     }
