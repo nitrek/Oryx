@@ -435,9 +435,10 @@ namespace Microsoft.Oryx.BuildScriptGenerator.Python
         private string GetMaxSatisfyingVersionAndVerify(string version)
         {
             var versionInfo = _versionProvider.GetVersionInfo();
-            var maxSatisfyingVersion = SemanticVersionResolver.GetMaxSatisfyingVersion(
-                version,
-                versionInfo.SupportedVersions);
+            //var maxSatisfyingVersion = SemanticVersionResolver.GetMaxSatisfyingVersion(
+            //    version,
+            //    versionInfo.SupportedVersions);
+            var maxSatisfyingVersion = version;
 
             if (string.IsNullOrEmpty(maxSatisfyingVersion))
             {
