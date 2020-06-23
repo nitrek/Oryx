@@ -71,7 +71,7 @@ namespace Microsoft.Oryx.BuildImage.Tests
                     Assert.NotNull(pythonPlatform);
                     Assert.NotNull(pythonPlatform.Versions);
                     Assert.True(pythonPlatform.Versions.Any());
-                    Assert.True(pythonPlatform.Versions.Contains("2.7.17"));
+                    Assert.True(pythonPlatform.Versions.Contains("3.9.0b1"));
 
                     var phpPlatform = actualResults
                         .Where(pr => pr.Name.EqualsIgnoreCase(PhpConstants.PlatformName))
