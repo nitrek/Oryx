@@ -33,12 +33,11 @@ namespace Microsoft.Oryx.BuildImage.Tests
             }
         }
 
-        [Theory]
-        [MemberData(nameof(ImageNameData))]
-        public void GeneratesScript_AndBuilds(string imageName)
+        [Fact]
+        public void GeneratesScript_AndBuildPython()
         {
             // Arrange
-            var version = "3.8.1";
+            var version = "3.8.3";
             var installationDir = $"{BuildScriptGenerator.Constants.TemporaryInstallationDirectoryRoot}/python/{version}";
             var appName = "flask-app";
             var volume = CreateSampleAppVolume(appName);
@@ -57,7 +56,7 @@ namespace Microsoft.Oryx.BuildImage.Tests
             // Act
             var result = _dockerCli.Run(new DockerRunArguments
             {
-                ImageId = imageName,
+                ImageId = Settings.BuildImageName,
                 EnvironmentVariables = new List<EnvironmentVariable> { CreateAppNameEnvVar(appName) },
                 Volumes = new List<DockerVolume> { volume },
                 CommandToExecuteOnRun = "/bin/bash",
