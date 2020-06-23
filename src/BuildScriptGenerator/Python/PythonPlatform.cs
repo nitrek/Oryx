@@ -443,7 +443,7 @@ namespace Microsoft.Oryx.BuildScriptGenerator.Python
             if (string.IsNullOrEmpty(maxSatisfyingVersion))
             {
                 var exc = new UnsupportedVersionException(
-                    PythonConstants.PlatformName,
+                    PythonConstants.PlatformName + " WAWAWA",
                     version,
                     versionInfo.SupportedVersions);
                 _logger.LogError(

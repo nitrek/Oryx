@@ -34,7 +34,7 @@ namespace Microsoft.Oryx.BuildScriptGenerator
             if (!targetPlatform.SupportedVersions.Contains(opts.PlatformVersion))
             {
                 throw new UnsupportedVersionException(
-                    targetPlatformName,
+                    targetPlatformName + " HAHAHA",
                     opts.PlatformVersion,
                     targetPlatform.SupportedVersions);
             }
