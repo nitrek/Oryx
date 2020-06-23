@@ -5,9 +5,11 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.Oryx.BuildImage.Tests;
 using Microsoft.Oryx.BuildScriptGenerator;
 using Microsoft.Oryx.BuildScriptGenerator.Php;
+using Microsoft.Oryx.BuildScriptGeneratorCli;
 using Microsoft.Oryx.Common;
 using Microsoft.Oryx.Tests.Common;
 using Xunit;
@@ -21,35 +23,24 @@ namespace Microsoft.Oryx.Integration.Tests
         {
         }
 
-        public static TheoryData<string, string> VersionAndImageNameData
-        {
-            get
-            {
-                var imageHelper = new ImageTestHelper();
-                var data = new TheoryData<string, string>();
-                data.Add("7.3", imageHelper.GetGitHubActionsBuildImage());
-                data.Add("7.4", imageHelper.GetGitHubActionsBuildImage());
-                return data;
-            }
-        }
-
         [Theory]
-        [MemberData(nameof(VersionAndImageNameData))]
-        public void BuildsAppByInstallingSdkDynamically(string phpVersion, string imageName)
+        [InlineData("7.4")]
+        [InlineData("7.3")]
+        [InlineData("7.2")]
+        [InlineData("7.0")]
+        [InlineData("5.6")]
+        public async Task BuildsAppByInstallingSdkDynamically(string phpVersion)
         {
             // Arrange
             var appName = "twig-example";
             var volume = CreateSampleAppVolume(appName);
             var appDir = volume.ContainerDir;
             var appOutputDir = "/tmp/app-output";
-            var defaultInstallDir = PhpConstants.InstalledPhpVersionsDir;
             var script = new ShellScriptBuilder()
+                .SetEnvironmentVariable(SettingsKeys.EnableDynamicInstall, true.ToString())
                 .SetEnvironmentVariable(
                     SdkStorageConstants.SdkStorageBaseUrlKeyName,
                     SdkStorageConstants.DevSdkStorageBaseUrl)
-                // Remove any existing installations
-                .AddCommand($"rm -rf {defaultInstallDir}")
-                .AddCommand($"mkdir -p {defaultInstallDir}")
                 .AddBuildCommand(
                 $"{appDir} -o {appOutputDir} --platform {PhpConstants.PlatformName} --platform-version {phpVersion}")
                 .ToString();
@@ -57,7 +48,7 @@ namespace Microsoft.Oryx.Integration.Tests
             // Act
             var result = _dockerCli.Run(new DockerRunArguments
             {
-                ImageId = imageName,
+                ImageId = _imageHelper.GetGitHubActionsBuildImage(),
                 EnvironmentVariables = new List<EnvironmentVariable> { CreateAppNameEnvVar(appName) },
                 Volumes = new List<DockerVolume> { volume },
                 CommandToExecuteOnRun = "/bin/bash",
@@ -69,7 +60,7 @@ namespace Microsoft.Oryx.Integration.Tests
             {
                 Assert.True(result.IsSuccess);
                 Assert.Contains(
-                    $"PHP executable: {Constants.TemporaryInstallationDirectoryRoot}/php/{phpVersion}",
+                    $"PHP executable: {BuildScriptGenerator.Constants.TemporaryInstallationDirectoryRoot}/php/{phpVersion}",
                     result.StdOut);
                 Assert.Contains($"Installing twig/twig", result.StdErr); // Composer prints its messages to STDERR
             },
