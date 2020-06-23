@@ -61,14 +61,14 @@ namespace Oryx.BuildImage.Tests
         public void DetectsAndInstallsPlatformVersion_SpecifiedByEnvironmentVariable()
         {
             // Arrange
-            var nodeVersion = "4.4.7";
+            var nodeVersion = "3.9.0b1";
             var volume = CreateWebFrontEndVolume();
             var appDir = volume.ContainerDir;
             var subDir = Guid.NewGuid();
             var script = new ShellScriptBuilder()
-                .SetEnvironmentVariable("NODE_VERSION", nodeVersion)
+                .SetEnvironmentVariable("PYTHON_VERSION", nodeVersion)
                 .AddCommand($"oryx prep -s {appDir}")
-                .AddDirectoryExistsCheck($"{Constants.TemporaryInstallationDirectoryRoot}/nodejs/{nodeVersion}")
+                .AddDirectoryExistsCheck($"{Constants.TemporaryInstallationDirectoryRoot}/python/{nodeVersion}")
                 .ToString();
 
             // Act
@@ -86,7 +86,7 @@ namespace Oryx.BuildImage.Tests
                 {
                     Assert.True(result.IsSuccess);
                     Assert.Contains(
-                        "Downloading and extracting nodejs version",
+                        "Downloading and extracting python version",
                         result.StdOut);
                 },
                 result.GetDebugInfo());
