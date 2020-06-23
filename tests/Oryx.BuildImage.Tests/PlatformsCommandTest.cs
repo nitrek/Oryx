@@ -29,7 +29,6 @@ namespace Microsoft.Oryx.BuildImage.Tests
         {
             // Arrange
             var script = new ShellScriptBuilder()
-                .SetEnvironmentVariable(SettingsKeys.EnableDynamicInstall, true.ToString())
                 .SetEnvironmentVariable(
                     SdkStorageConstants.SdkStorageBaseUrlKeyName,
                     SdkStorageConstants.DevSdkStorageBaseUrl)
@@ -73,7 +72,7 @@ namespace Microsoft.Oryx.BuildImage.Tests
                     Assert.NotNull(pythonPlatform);
                     Assert.NotNull(pythonPlatform.Versions);
                     Assert.True(pythonPlatform.Versions.Any());
-                    Assert.True(pythonPlatform.Versions.Contains("3.9.0b1"));
+                    Assert.True(pythonPlatform.Versions.Contains("3.8.0b3"));
 
                     var phpPlatform = actualResults
                         .Where(pr => pr.Name.EqualsIgnoreCase(PhpConstants.PlatformName))
