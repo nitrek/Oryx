@@ -27,7 +27,7 @@ namespace Microsoft.Oryx.BuildScriptGenerator.Php
             var scriptBuilder = new StringBuilder();
             scriptBuilder.AppendLine(script);
             scriptBuilder.AppendLine(
-                $"export composer=\"{Constants.TemporaryInstallationDirectoryRoot}/php-composer/{version}/composer.phar\"");
+                $"export composer=\"{_commonOptions.DynamicInstallRootDir}/php-composer/{version}/composer.phar\"");
             return scriptBuilder.ToString();
         }
 
@@ -36,7 +36,7 @@ namespace Microsoft.Oryx.BuildScriptGenerator.Php
             return IsVersionInstalled(
                 version,
                 builtInDir: PhpConstants.InstalledPhpComposerVersionDir,
-                dynamicInstallDir: $"{Constants.TemporaryInstallationDirectoryRoot}/php-composer");
+                dynamicInstallDir: $"{_commonOptions.DynamicInstallRootDir}/php-composer");
         }
     }
 }

@@ -6,18 +6,19 @@
 using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
-using Microsoft.Oryx.BuildScriptGenerator;
+using BuildScriptGeneratorLib = Microsoft.Oryx.BuildScriptGenerator;
 
 namespace Microsoft.Oryx.BuildScriptGeneratorCli.Options
 {
-    public class BuildScriptGeneratorOptionsSetup : OptionsSetupBase, IConfigureOptions<BuildScriptGeneratorOptions>
+    public class BuildScriptGeneratorOptionsSetup
+        : OptionsSetupBase, IConfigureOptions<BuildScriptGeneratorLib.BuildScriptGeneratorOptions>
     {
         public BuildScriptGeneratorOptionsSetup(IConfiguration configuration)
             : base(configuration)
         {
         }
 
-        public void Configure(BuildScriptGeneratorOptions options)
+        public void Configure(BuildScriptGeneratorLib.BuildScriptGeneratorOptions options)
         {
             // "config.GetValue" call will get the most closest value provided based on the order of
             // configuration sources added to the ConfigurationBuilder above.
@@ -29,7 +30,6 @@ namespace Microsoft.Oryx.BuildScriptGeneratorCli.Options
                 ? null : requiredOsPackages.Split(',').Select(pkg => pkg.Trim()).ToArray();
 
             options.EnableCheckers = !GetBooleanValue(SettingsKeys.DisableCheckers);
-            options.EnableDynamicInstall = GetBooleanValue(SettingsKeys.EnableDynamicInstall);
             options.EnableDotNetCoreBuild = !GetBooleanValue(SettingsKeys.DisableDotNetCoreBuild);
             options.EnableNodeJSBuild = !GetBooleanValue(SettingsKeys.DisableNodeJSBuild);
             options.EnablePythonBuild = !GetBooleanValue(SettingsKeys.DisablePythonBuild);
@@ -42,6 +42,16 @@ namespace Microsoft.Oryx.BuildScriptGeneratorCli.Options
             options.PostBuildCommand = GetStringValue(SettingsKeys.PostBuildCommand);
             options.OryxSdkStorageBaseUrl = GetStringValue(SettingsKeys.OryxSdkStorageBaseUrl);
             options.AppType = GetStringValue(SettingsKeys.AppType);
+
+            // Dynamic install
+            options.EnableDynamicInstall = GetBooleanValue(SettingsKeys.EnableDynamicInstall);
+            options.DynamicInstallRootDir = GetStringValue(SettingsKeys.DynamicInstallRootDir);
+            // If no explicit value was provided for the directory, we fall back to the safest option 
+            // (in terms of permissions)
+            if (string.IsNullOrEmpty(options.DynamicInstallRootDir))
+            {
+                options.DynamicInstallRootDir = BuildScriptGeneratorLib.Constants.TemporaryInstallationDirectoryRoot;
+            }
         }
     }
 }

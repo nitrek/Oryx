@@ -254,6 +254,7 @@ namespace Microsoft.Oryx.BuildScriptGenerator
         {
             string script;
             string benvArgs = StringExtensions.JoinKeyValuePairs(toolsToVersion);
+            benvArgs = $"{benvArgs} {Constants.BenvDynamicInstallRootDirKey}=\"{_cliOptions.DynamicInstallRootDir}\"";
 
             Dictionary<string, string> buildProperties = buildScriptSnippets
                 .Where(s => s.BuildProperties != null)
@@ -262,7 +263,7 @@ namespace Microsoft.Oryx.BuildScriptGenerator
             buildProperties[ManifestFilePropertyKeys.OperationId] = context.OperationId;
 
             var allPlatformNames = detectionResults
-                .Where( s => s.Platform != null)
+                .Where(s => s.Platform != null)
                 .Select(s => s.Platform)
                 .ToList();
 

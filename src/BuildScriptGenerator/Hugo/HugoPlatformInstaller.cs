@@ -26,7 +26,7 @@ namespace Microsoft.Oryx.BuildScriptGenerator.Hugo
                 .Replace("#VERSION#", version)
                 .Replace("#TAR_FILE#", tarFile);
             var platformName = HugoConstants.PlatformName;
-            var versionDirInTemp = $"{Constants.TemporaryInstallationDirectoryRoot}/{platformName}/{version}";
+            var versionDirInTemp = $"{_commonOptions.DynamicInstallRootDir}/{platformName}/{version}";
 
             var snippet = new StringBuilder();
             snippet
@@ -59,7 +59,7 @@ namespace Microsoft.Oryx.BuildScriptGenerator.Hugo
             return IsVersionInstalled(
                 version,
                 builtInDir: HugoConstants.InstalledHugoVersionsDir,
-                dynamicInstallDir: $"{Constants.TemporaryInstallationDirectoryRoot}/hugo");
+                dynamicInstallDir: $"{_commonOptions.DynamicInstallRootDir}/hugo");
         }
     }
 }

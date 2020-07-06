@@ -37,7 +37,7 @@ namespace Microsoft.Oryx.BuildScriptGenerator
             var versionDirInTemp = directoryToInstall;
             if (string.IsNullOrEmpty(versionDirInTemp))
             {
-                versionDirInTemp = $"{Constants.TemporaryInstallationDirectoryRoot}/{platformName}/{version}";
+                versionDirInTemp = $"{_commonOptions.DynamicInstallRootDir}/{platformName}/{version}";
             }
 
             var tarFile = $"{version}.tar.gz";

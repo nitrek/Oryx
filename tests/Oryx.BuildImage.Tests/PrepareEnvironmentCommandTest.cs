@@ -8,9 +8,9 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Oryx.BuildImage.Tests;
 using Microsoft.Oryx.BuildScriptGenerator;
+using Microsoft.Oryx.BuildScriptGenerator.Common;
 using Microsoft.Oryx.BuildScriptGenerator.Node;
 using Microsoft.Oryx.BuildScriptGenerator.Python;
-using Microsoft.Oryx.BuildScriptGenerator.Common;
 using Microsoft.Oryx.Tests.Common;
 using Xunit;
 using Xunit.Abstractions;
@@ -177,6 +177,43 @@ namespace Oryx.BuildImage.Tests
                 $"{Constants.TemporaryInstallationDirectoryRoot}/{NodeConstants.PlatformName}/{nodeVersion}")
                 .AddDirectoryExistsCheck(
                 $"{Constants.TemporaryInstallationDirectoryRoot}/{PythonConstants.PlatformName}/{pythonVersion}")
+                .ToString();
+
+            // Act
+            var result = _dockerCli.Run(new DockerRunArguments
+            {
+                ImageId = _imageHelper.GetGitHubActionsBuildImage(),
+                CommandToExecuteOnRun = "/bin/bash",
+                CommandArguments = new[] { "-c", script }
+            });
+
+            // Assert
+            RunAsserts(
+                () =>
+                {
+                    Assert.True(result.IsSuccess);
+                },
+                result.GetDebugInfo());
+        }
+
+        [Fact]
+        public void InstallsPlatformAtCustomInstallationRootDirectory()
+        {
+            // Arrange
+            var nodeVersion = "4.4.7";
+            var customDynamicInstallRootDir = "/foo/bar";
+            var expectedText =
+                $"Node path is: {customDynamicInstallRootDir}/{NodeConstants.PlatformName}/{nodeVersion}/bin";
+            var script = new ShellScriptBuilder()
+                .SetEnvironmentVariable("DYNAMIC_INSTALL_ROOT_DIR", customDynamicInstallRootDir)
+                .AddCommand(
+                $"oryx prep --skip-detection --platforms-and-versions " +
+                $"'{NodeConstants.PlatformName}={nodeVersion}'")
+                .AddDirectoryExistsCheck(
+                $"{Constants.TemporaryInstallationDirectoryRoot}/{NodeConstants.PlatformName}/{nodeVersion}")
+                .AddCommand("source benv node=12")
+                .AddCommand("nodePath=$(which node)")
+                .AddCommand("echo \"Node path is: $nodePath\"")
                 .ToString();
 
             // Act

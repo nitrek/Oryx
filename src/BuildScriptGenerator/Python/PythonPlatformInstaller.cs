@@ -27,7 +27,7 @@ namespace Microsoft.Oryx.BuildScriptGenerator.Python
             return IsVersionInstalled(
                 version,
                 builtInDir: PythonConstants.InstalledPythonVersionsDir,
-                dynamicInstallDir: $"{Constants.TemporaryInstallationDirectoryRoot}/python");
+                dynamicInstallDir: $"{_commonOptions.DynamicInstallRootDir}/python");
         }
     }
 }

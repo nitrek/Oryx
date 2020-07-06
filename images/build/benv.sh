@@ -23,6 +23,9 @@ matchesName() {
 #   dotnet --version (This should print version 3)
 while read benvvar; do
   set -- "$benvvar" "$@"
+done < <(set | grep -i '^dynamic_install_root_dir=')
+while read benvvar; do
+  set -- "$benvvar" "$@"
 done < <(set | grep -i '^php=')
 while read benvvar; do
   set -- "$benvvar" "$@"
@@ -59,6 +62,29 @@ updatePath() {
   fi
 }
 
+benv-getDynamicInstallRootDir() {
+  # Iterate through arguments of the format "name=value"
+  # and resolve each one, or exit if there is a failure.
+  local explicitDynamicInstallRootDir=""
+  while [[ $1 = *"="* ]]; do
+    local name=$(echo $1 | sed 's/=.*$//')
+    local value=$(echo $1 | sed 's/^.*=//')
+
+    if matchesName "dynamic_install_root_dir" "$name"
+    then
+      explicitDynamicInstallRootDir="$value"
+    fi
+    shift
+  done
+
+  if [ -z "$explicitDynamicInstallRootDir" ]
+  then
+    echo "/tmp/oryx/platforms"
+  else
+    echo "$explicitDynamicInstallRootDir"
+  fi
+}
+
 # NOTE: We handle .NET Core specially because there are 2 version types:
 # SDK version and Runtime version
 # For platforms other than dotnet, we look at a folder structure like '/opt/nodejs/10.14.1', but
@@ -68,8 +94,9 @@ benv-showSupportedVersionsErrorInfo() {
   local userPlatformName="$1"
   local platformDirName="$2"
   local userSuppliedVersion="$3"
+  local dynamicInstallRootDir="$4"
   local builtInInstallDir="/opt/$platformDirName"
-  local dynamicInstallDir="/tmp/oryx/platforms/$platformDirName"
+  local dynamicInstallDir="$dynamicInstallRootDir/$platformDirName"
 
   if [ "$platformDirName" == "dotnet" ]; then
     builtInInstallDir="$builtInInstallDir/runtimes"
@@ -95,8 +122,9 @@ benv-showSupportedVersionsErrorInfo() {
 benv-getPlatformDir() {
   local platformDirName="$1"
   local userSuppliedVersion="$2"
+  local dynamicInstallRootDir="$3"
   local builtInInstallDir="/opt/$platformDirName"
-  local dynamicInstallDir="/tmp/oryx/platforms/$platformDirName"
+  local dynamicInstallDir="$dynamicInstallRootDir/$platformDirName"
   
   if [ "$platformDirName" == "dotnet" ]; then
     builtInInstallDir="$builtInInstallDir/runtimes"
@@ -125,6 +153,8 @@ benv-versions() {
   done
 }
 
+dynamicInstallRootDir=$(benv-getDynamicInstallRootDir "$@")
+
 benv-resolve() {
   local name=$(echo $1 | sed 's/=.*$//')
   local value=$(echo $1 | sed 's/^.*=//')
@@ -135,9 +165,9 @@ benv-resolve() {
     || matchesName "node_version" "$name" \
     && [ "${value::1}" != "/" ]; then
     
-    platformDir=$(benv-getPlatformDir "nodejs" "$value")
+    platformDir=$(benv-getPlatformDir "nodejs" "$value" "$dynamicInstallRootDir")
     if [ "$platformDir" == "NotFound" ]; then
-      benv-showSupportedVersionsErrorInfo "node" "nodejs" "$value"
+      benv-showSupportedVersionsErrorInfo "node" "nodejs" "$value" "$dynamicInstallRootDir"
       return 1
     fi
 
@@ -154,9 +184,9 @@ benv-resolve() {
 
   # Resolve npm versions
   if matchesName "npm" "$name" || matchesName "npm_version" "$name" && [ "${value::1}" != "/" ]; then
-    platformDir=$(benv-getPlatformDir "npm" "$value")
+    platformDir=$(benv-getPlatformDir "npm" "$value" "$dynamicInstallRootDir")
     if [ "$platformDir" == "NotFound" ]; then
-      benv-showSupportedVersionsErrorInfo "npm" "npm" "$value"
+      benv-showSupportedVersionsErrorInfo "npm" "npm" "$value" "$dynamicInstallRootDir"
       return 1
     fi
 
@@ -172,9 +202,9 @@ benv-resolve() {
 
   # Resolve python versions
   if matchesName "python" "$name" || matchesName "python_version" "$name" && [ "${value::1}" != "/" ]; then
-    platformDir=$(benv-getPlatformDir "python" "$value")
+    platformDir=$(benv-getPlatformDir "python" "$value" "$dynamicInstallRootDir")
     if [ "$platformDir" == "NotFound" ]; then
-      benv-showSupportedVersionsErrorInfo "python" "python" "$value"
+      benv-showSupportedVersionsErrorInfo "python" "python" "$value" "$dynamicInstallRootDir"
       return 1
     fi
 
@@ -197,9 +227,9 @@ benv-resolve() {
 
   # Resolve hugo versions
   if matchesName "hugo" "$name" || matchesName "hugo_version" "$name" && [ "${value::1}" != "/" ]; then
-    platformDir=$(benv-getPlatformDir "hugo" "$value")
+    platformDir=$(benv-getPlatformDir "hugo" "$value" "$dynamicInstallRootDir")
     if [ "$platformDir" == "NotFound" ]; then
-      benv-showSupportedVersionsErrorInfo "hugo" "hugo" "$value"
+      benv-showSupportedVersionsErrorInfo "hugo" "hugo" "$value" "$dynamicInstallRootDir"
       return 1
     fi
 
@@ -212,9 +242,9 @@ benv-resolve() {
 
   # Resolve PHP versions
   if matchesName "php" "$name" || matchesName "php_version" "$name" && [ "${value::1}" != "/" ]; then
-    platformDir=$(benv-getPlatformDir "php" "$value")
+    platformDir=$(benv-getPlatformDir "php" "$value" "$dynamicInstallRootDir")
     if [ "$platformDir" == "NotFound" ]; then
-      benv-showSupportedVersionsErrorInfo "php" "php" "$value"
+      benv-showSupportedVersionsErrorInfo "php" "php" "$value" "$dynamicInstallRootDir"
       return 1
     fi
 
@@ -229,9 +259,9 @@ benv-resolve() {
 
   # Resolve dotnet versions
   if matchesName "dotnet" "$name" || matchesName "dotnet_version" "$name" && [ "${value::1}" != "/" ]; then
-    runtimeDir=$(benv-getPlatformDir "dotnet" "$value")
+    runtimeDir=$(benv-getPlatformDir "dotnet" "$value" "$dynamicInstallRootDir")
     if [ "$runtimeDir" == "NotFound" ]; then
-      benv-showSupportedVersionsErrorInfo "dotnet" "dotnet" "$value"
+      benv-showSupportedVersionsErrorInfo "dotnet" "dotnet" "$value" "$dynamicInstallRootDir"
       return 1
     fi
 
